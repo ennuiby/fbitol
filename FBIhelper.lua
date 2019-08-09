@@ -2,10 +2,16 @@ script_name('FBI Helper')
 script_version("0.2")
 script_author('Chase_Yanetto')
 
+local encoding = require 'encoding'
+encoding.default = 'CP1251'
+u8 = encoding.UTF8
+
 local dlstatus = require('moonloader').download_status
 local sampev = require 'lib.samp.events'
 local check = false
 local check1 = false
+
+local color = 0x0C2265
 
 local nick = ''
 
