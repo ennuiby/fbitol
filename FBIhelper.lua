@@ -1,6 +1,10 @@
 script_name('FBI Helper')
-script_version('0.1')
+script_version('0.2')
 script_author('Chase_Yanetto')
+
+local encoding = require 'encoding'
+encoding.default = 'CP1251'
+u8 = encoding.UTF8
 
 require 'lib.moonloader'
 
