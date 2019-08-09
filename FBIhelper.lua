@@ -1,5 +1,5 @@
 script_name('FBI Helper')
-script_version("0.2")
+script_version("0.1")
 script_author('Chase_Yanetto')
 
 local encoding = require 'encoding'
@@ -102,36 +102,47 @@ function sh(pam)
     end
 end
 
+
 function update()
-  local fpath = os.getenv('TEMP') .. '\\ftulsupd.json' -- куда будет качаться наш файлик для сравнения версии
-  downloadUrlToFile('https://raw.githubusercontent.com/ennuiby/fbitol/master/ftulsupd.json', fpath, function(id, status, p1, p2) -- ссылку на ваш гитхаб где есть строчки которые я ввёл в теме или любой другой сайт
-    if status == dlstatus.STATUS_ENDDOWNLOADDATA then
-    local f = io.open(fpath, 'r') -- открывает файл
-    if f then
-      local info = decodeJson(f:read('*a')) -- читает
-      updatelink = info.updateurl
-      if info and info.latest then
-        version = tonumber(info.latest) -- переводит версию в число
-        if version > tonumber(thisScript().version) then -- если версия больше чем версия установленная то...
-          lua_thread.create(goupdate) -- апдейт
-        else -- если меньше, то
-          update = false -- не даём обновиться
-          sampAddChatMessage(('[Testing]: У вас и так последняя версия! Обновление отменено'), color)
+    local fpath = os.getenv('TEMP') .. '\\ftulsupd.json'
+    downloadUrlToFile('https://raw.githubusercontent.com/ennuiby/fbitol/master/ftulsupd.json', fpath, function(id, status, p1, p2)
+        if status == dlstatus.STATUS_ENDDOWNLOADDATA then
+            local f = io.open(fpath, 'r')
+            if f then
+                local info = decodeJson(f:read('*a'))
+                updatelink = info.updateurl
+                updlist1 = info.updlist
+                ttt = updlist1
+			    if info and info.latest then
+                    if tonumber(thisScript().version) < tonumber(info.latest) then
+                        ftext('Обнаружено обновление {0C2265}FBI Tools{ffffff}. Для обновления нажмите кнопку в окошке.')
+                        ftext('Примечание: Если у вас не появилось окошко введите {0C2265}/ft')
+                        updwindows.v = true
+                        canupdate = true
+                    else
+                        print('Обновлений скрипта не обнаружено. Приятной игры.')
+                        update = false
+				    end
+                end
+            else
+                print("Проверка обновления прошка неуспешно. Запускаю старую версию.")
+            end
+        elseif status == 64 then
+            print("Проверка обновления прошка неуспешно. Запускаю старую версию.")
+            update = false
         end
-      end
-    end
-  end
-end)
+    end)
 end
---скачивание актуальной версии
+
+
 function goupdate()
-sampAddChatMessage(('[Testing]: Обнаружено обновление. AutoReload может конфликтовать. Обновляюсь...'), color)
-sampAddChatMessage(('[Testing]: Текущая версия: '..thisScript().version..". Новая версия: "..version), color)
-wait(300)
-downloadUrlToFile(updatelink, thisScript().path, function(id3, status1, p13, p23) -- качает ваш файлик с latest version
-  if status1 == dlstatus.STATUS_ENDDOWNLOADDATA then
-  sampAddChatMessage(('[Testing]: Обновление завершено!'), color)
-  thisScript():reload()
-end
-end)
+    ftext('Началось скачивание обновления. Скрипт перезагрузится через пару секунд.', -1)
+    wait(300)
+    downloadUrlToFile(updatelink, thisScript().path, function(id3, status1, p13, p23)
+        if status1 == dlstatus.STATUS_ENDDOWNLOADDATA then
+            thisScript():reload()
+        elseif status1 == 64 then
+            ftext("Скачивание обновления прошло не успешно. Запускаю старую версию")
+        end
+    end)
 end
