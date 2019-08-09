@@ -1,7 +1,4 @@
 {
-  "latest": 3.3,
-  "updateurl": "https://raw.githubusercontent.com/ennuiby/fbitol/master/fbitools.lua",
-  "updlist": " • Код скрипта был полностью переписан и оптимизирован
-  • Была убрана <зависающая> мышь после загрузке/перезагрузке скрипта.
-  • Подобран более красивый интерфейс скрипта. 
+  "updateurl": "https://raw.githubusercontent.com/ennuiby/fbitol/master/FBIhelper.lua",
+  "latest": "0.2"
 }
