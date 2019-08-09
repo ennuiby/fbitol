@@ -1,9 +1,10 @@
 script_name('FBI Helper')
-script_version('0.2')
+script_version('0.1')
 script_author('Chase_Yanetto')
 
 require 'lib.moonloader'
 
+local dlstatus = require('moonloader').download_status
 local sampev = require 'lib.samp.events'
 local check = false
 local check1 = false
@@ -41,7 +42,6 @@ end
 
 function main()
     while not isSampAvailable() do wait(0) end
-	autoupdate("https://raw.githubusercontent.com/ennuiby/fbitol/master/ftulsupd.json", '['..string.upper(thisScript().name)..']: ', "")
 	sampRegisterChatCommand('onp', onp)
 	sampRegisterChatCommand('mpr', mpr)
 	sampRegisterChatCommand('sh', sh)
@@ -110,10 +110,8 @@ function update()
                 ttt = updlist1
 			    if info and info.latest then
                     if tonumber(thisScript().version) < tonumber(info.latest) then
-                        ftext('Обнаружено обновление {0C2265}FBI Tools{ffffff}. Для обновления нажмите кнопку в окошке.')
-                        ftext('Примечание: Если у вас не появилось окошко введите {0C2265}/ft')
-                        updwindows.v = true
-                        canupdate = true
+                        ftext('Обнаружено обновление {0C2265}FBI Helper{ffffff}. Для обновления нажмите кнопку в окошке.')
+                        lua_thread.create(goupdate)
                     else
                         print('Обновлений скрипта не обнаружено. Приятной игры.')
                         update = false
