@@ -13,7 +13,7 @@ local check1 = false
 
 local nick = ''
 
-ctag = " FBI Tools {ffffff}| "
+ctag = " FBI Helper {ffffff}| "
 
 function ftext(message)
     sampAddChatMessage(string.format('%s %s', ctag, message), 0xDC143C)
