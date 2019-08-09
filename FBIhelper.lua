@@ -3,6 +3,8 @@ script_version('0.2')
 script_author('Chase_Yanetto')
 
 require 'lib.moonloader'
+local copas = require "copas"
+local chttp = require "copas.http"
 
 local dlstatus = require('moonloader').download_status
 local sampev = require 'lib.samp.events'
@@ -45,7 +47,7 @@ function main()
 	sampRegisterChatCommand('onp', onp)
 	sampRegisterChatCommand('mpr', mpr)
 	sampRegisterChatCommand('sh', sh)
-	update()
+	updateScript()
 	wait(-1)
 end
 
@@ -98,42 +100,121 @@ function sh(pam)
     end
 end
 
-function update()
-    local fpath = os.getenv('TEMP') .. '\\ftulsupd.json'
-    downloadUrlToFile('https://raw.githubusercontent.com/ennuiby/fbitol/master/ftulsupd.json', fpath, function(id, status, p1, p2)
-        if status == dlstatus.STATUS_ENDDOWNLOADDATA then
-            local f = io.open(fpath, 'r')
-            if f then
-                local info = decodeJson(f:read('*a'))
-                updatelink = info.updateurl
-			    if info and info.latest then
-                    if tonumber(thisScript().version) < tonumber(info.latest) then
-                        ftext('Обнаружено обновление {0C2265}FBI Helper{ffffff}. Для обновления нажмите кнопку в окошке.')
-                        goupdate()
-                    else
-                        print('Обновлений скрипта не обнаружено. Приятной игры.')
-                        update = false
-				    end
-                end
-            else
-                print("Проверка обновления прошка неуспешно. Запускаю старую версию.")
-            end
-        elseif status == 64 then
-            print("Проверка обновления прошка неуспешно. Запускаю старую версию.")
-            update = false
-        end
-    end)
+function updateScript()
+	httpRequest("https://raw.githubusercontent.com/ennuiby/fbitol/master/ftulsupd.json", nil, function(response)
+		if response ~= nil then
+			response = decodeJson(response)
+			if response["version"] ~= nil and response["url"] ~= nil then
+				if response["version"] ~= thisScript().version then
+					sampAddChatMessage("New script version found!", 0xFFFFFF)
+					sampAddChatMessage("Current version: "..thisScript().version, 0xFFFFFF)
+					sampAddChatMessage("New version: "..response["version"], 0xFFFFFF)
+					sampAddChatMessage("Start updating...", 0xFFFFFF)
+					httpRequest(response["url"], nil, function(downloadedFile, err)
+						if downloadedFile ~= nil then
+							lua_thread.create(function()
+								local pathToNewVersion = thisScript().directory.."/"..thisScript().name.."_"..reposponse["version"]..".lua";
+								local file = io.open(pathToNewVersion, "w")
+								if file ~= nil then
+									file:write(downloadedFile)
+									file:close()
+									
+									sampAddChatMessage("New version downloaded to: "..pathToNewVersion, 0xFFFFFF)
+								else
+									sampAddChatMessage("Cannot edit script!", 0xFFFFFF)
+								
+									enabled = true
+								end
+							end)
+						else
+							sampAddChatMessage("Script updating error: "..err, 0xFFFFFF)
+							
+							enabled = true
+						end
+					end)
+				else
+					enabled = true
+				end
+			else
+				enabled = true
+			end
+		else
+			enabled = true
+		end
+	end)
 end
 
+function switchCopasStatus()
+    if not copas.running then
+        copas.running = true
+        lua_thread.create(function()
+            wait(0)
+            while not copas.finished() do
+                local ok, err = copas.step(0)
+                if ok == nil then error(err) end
+                wait(0)
+            end
+            copas.running = false
+        end)
+    end
+end
 
-function goupdate()
-    ftext('Началось скачивание обновления. Скрипт перезагрузится через пару секунд.', -1)
-    wait(300)
-    downloadUrlToFile(updatelink, thisScript().path, function(id3, status1, p13, p23)
-        if status1 == dlstatus.STATUS_ENDDOWNLOADDATA then
-            thisScript():reload()
-        elseif status1 == 64 then
-            ftext("Скачивание обновления прошло не успешно. Запускаю старую версию")
-        end
-    end)
+function httpRequest(request, body, handler) -- Author: FYP
+	switchCopasStatus()
+    if handler then
+        return copas.addthread(function(r, b, h)
+            copas.setErrorHandler(function(err) h(nil, err) end)
+            h(chttp.request(r, b))
+        end, request, body, handler)
+    else
+        local results
+        local thread = copas.addthread(function(r, b)
+            copas.setErrorHandler(function(err) results = {nil, err} end)
+            results = table.pack(chttp.request(r, b))
+        end, request, body)
+        while coroutine.status(thread) ~= 'dead' do wait(0) end
+        return table.unpack(results)
+    end
+end
+
+function char_to_hex(str) --Author: ShuffleBoy
+  return string.format("%%%02X", string.byte(str))
+end
+
+function url_encode(str) --Author: ShuffleBoy
+  local str = string.gsub(str, "\\", "\\")
+  local str = string.gsub(str, "([^%w])", char_to_hex)
+  return str
+end
+
+function http_build_query(query) --Author: ShuffleBoy
+  local buff=""
+  for k, v in pairs(query) do
+    buff = buff.. string.format("%s=%s&", k, url_encode(v))
+  end
+  local buff = string.reverse(string.gsub(string.reverse(buff), "&", "", 1))
+  return buff
+end
+
+function dump(o) -- From internet
+   if type(o) == 'table' then
+      local s = '{ '
+      for k,v in pairs(o) do
+         if type(k) ~= 'number' then k = '"'..k..'"' end
+         s = s .. '['..k..'] = ' .. dump(v) .. ','
+      end
+      return s .. '} '
+   else
+      return tostring(o)
+   end
+end
+
+function search(search_table, search_column, search_value) --Поиск в таблице заданного значения в заданном столбце
+	for key, value in ipairs(search_table) do
+		if value[search_column] == search_value then
+			return key;
+		end
+	end
+					
+	return nil
 end
