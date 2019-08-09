@@ -41,7 +41,7 @@ end
 
 function main()
     while not isSampAvailable() do wait(0) end
-	autoupdate("тут ссылка на ваш json", '['..string.upper(thisScript().name)..']: ', "")
+	autoupdate("https://raw.githubusercontent.com/ennuiby/fbitol/master/ftulsupd.json", '['..string.upper(thisScript().name)..']: ', "")
 	sampRegisterChatCommand('onp', onp)
 	sampRegisterChatCommand('mpr', mpr)
 	sampRegisterChatCommand('sh', sh)
