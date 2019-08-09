@@ -11,14 +11,13 @@ local sampev = require 'lib.samp.events'
 local check = false
 local check1 = false
 
-local color = 0x0C2265
 
 local nick = ''
 
 ctag = " FBI Tools {ffffff}| "
 
 function ftext(message)
-    sampAddChatMessage(ctag..message, 0x0C2265)
+    sampAddChatMessage(string.format('%s %s', ctag, message), 0xDC143C)
 end
 
 function sampev.onServerMessage(color, text)
