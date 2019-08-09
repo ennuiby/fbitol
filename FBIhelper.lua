@@ -45,6 +45,7 @@ function main()
 	sampRegisterChatCommand('onp', onp)
 	sampRegisterChatCommand('mpr', mpr)
 	sampRegisterChatCommand('sh', sh)
+	update()
 	wait(-1)
 end
 
@@ -97,57 +98,46 @@ function sh(pam)
     end
 end
 
-function autoupdate(json_url, prefix, url)
-  local dlstatus = require('moonloader').download_status
-  local json = getWorkingDirectory() .. '\\'..thisScript().name..'-version.json'
-  if doesFileExist(json) then os.remove(json) end
-  downloadUrlToFile(json_url, json,
-    function(id, status, p1, p2)
-      if status == dlstatus.STATUSEX_ENDDOWNLOAD then
-        if doesFileExist(json) then
-          local f = io.open(json, 'r')
-          if f then
-            local info = decodeJson(f:read('*a'))
-            updatelink = info.updateurl
-            updateversion = info.latest
-            f:close()
-            os.remove(json)
-            if updateversion ~= thisScript().version then
-              lua_thread.create(function(prefix)
-                local dlstatus = require('moonloader').download_status
-                local color = -1
-                sampAddChatMessage((prefix..'Обнаружено обновление. Пытаюсь обновиться c '..thisScript().version..' на '..updateversion), color)
-                wait(250)
-                downloadUrlToFile(updatelink, thisScript().path,
-                  function(id3, status1, p13, p23)
-                    if status1 == dlstatus.STATUS_DOWNLOADINGDATA then
-                      print(string.format('Загружено %d из %d.', p13, p23))
-                    elseif status1 == dlstatus.STATUS_ENDDOWNLOADDATA then
-                      print('Загрузка обновления завершена.')
-                      sampAddChatMessage((prefix..'Обновление завершено!'), color)
-                      goupdatestatus = true
-                      lua_thread.create(function() wait(500) thisScript():reload() end)
-                    end
-                    if status1 == dlstatus.STATUSEX_ENDDOWNLOAD then
-                      if goupdatestatus == nil then
-                        sampAddChatMessage((prefix..'Обновление прошло неудачно. Запускаю устаревшую версию..'), color)
+function update()
+    local fpath = os.getenv('TEMP') .. '\\ftulsupd.json'
+    downloadUrlToFile('https://raw.githubusercontent.com/ennuiby/fbitol/master/ftulsupd.json', fpath, function(id, status, p1, p2)
+        if status == dlstatus.STATUS_ENDDOWNLOADDATA then
+            local f = io.open(fpath, 'r')
+            if f then
+                local info = decodeJson(f:read('*a'))
+                updatelink = info.updateurl
+                updlist1 = info.updlist
+                ttt = updlist1
+			    if info and info.latest then
+                    if tonumber(thisScript().version) < tonumber(info.latest) then
+                        ftext('Обнаружено обновление {0C2265}FBI Tools{ffffff}. Для обновления нажмите кнопку в окошке.')
+                        ftext('Примечание: Если у вас не появилось окошко введите {0C2265}/ft')
+                        updwindows.v = true
+                        canupdate = true
+                    else
+                        print('Обновлений скрипта не обнаружено. Приятной игры.')
                         update = false
-                      end
-                    end
-                  end
-                )
-                end, prefix
-              )
+				    end
+                end
             else
-              update = false
-              print('v'..thisScript().version..': Обновление не требуется.')
+                print("Проверка обновления прошка неуспешно. Запускаю старую версию.")
             end
-          end
-        else
-          print('v'..thisScript().version..': Не могу проверить обновление. Смиритесь или проверьте самостоятельно на '..url)
-          update = false
+        elseif status == 64 then
+            print("Проверка обновления прошка неуспешно. Запускаю старую версию.")
+            update = false
         end
-      end
     end)
-  while update ~= false do wait(100) end
+end
+
+
+function goupdate()
+    ftext('Началось скачивание обновления. Скрипт перезагрузится через пару секунд.', -1)
+    wait(300)
+    downloadUrlToFile(updatelink, thisScript().path, function(id3, status1, p13, p23)
+        if status1 == dlstatus.STATUS_ENDDOWNLOADDATA then
+            thisScript():reload()
+        elseif status1 == 64 then
+            ftext("Скачивание обновления прошло не успешно. Запускаю старую версию")
+        end
+    end)
 end
