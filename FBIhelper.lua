@@ -11,7 +11,6 @@ local sampev = require 'lib.samp.events'
 local check = false
 local check1 = false
 
-
 local nick = ''
 
 ctag = " FBI Tools {ffffff}| "
