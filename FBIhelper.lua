@@ -23,11 +23,11 @@ end
 
 function sampev.onServerMessage(color, text)
 	if check then
-		if color == -65366 and text:find('%[РўРµР»РµС„РѕРЅ%] .+: .+') then
-			local nick, text = text:match('%[РўРµР»РµС„РѕРЅ%]%s(.*):%s(.*)')
+		if color == -65366 and text:find('%[Телефон%] .+: .+') then
+			local nick, text = text:match('%[Телефон%]%s(.*):%s(.*)')
 			lua_thread.create(function()
 				wait(100)
-				sampSendChat('/r [РџСЂРѕСЃР»СѓС€РєР° С‚РµР»РµС„РѕРЅР°]: "'..text..'"')
+				sampSendChat('/r [Прослушка телефона]: "'..text..'"')
 			end)
 		end
 	end
@@ -37,7 +37,7 @@ function sampev.onServerMessage(color, text)
 			if nick == nick1 then
 				lua_thread.create(function()
 					wait(400)
-					sampSendChat("/r [РњРёРЅРё-РїРµСЂРµРґР°С‚С‡РёРє]: "..text.."")
+					sampSendChat("/r [Мини-передатчик]: "..text.."")
 				end)
 			end
 		end
@@ -59,35 +59,35 @@ function mpr(pam)
 		if pID ~= nil then
 			if sampIsPlayerConnected(pID) then
 				nick = sampGetPlayerNickname(pID)
-				ftext('РќРѕРІС‹Р№ РЅРёРє Р·Р°РїРёСЃР°РЅ РІ Р±СѓС„РµСЂ РѕР±РјРµРЅР° СЃРєСЂРёРїС‚Р°.')
+				ftext('Новый ник записан в буфер обмена скрипта.')
 			else
-				ftext('РРіСЂРѕРє РЅРµ РїРѕРґРєР»СЋС‡РµРЅ Рє СЃРµСЂРІРµСЂСѓ.')
+				ftext('Игрок не подключен к серверу.')
 			end
 		else
-			ftext("РСЃРїРѕР»СЊР·СѓР№С‚Рµ: /mpr [ID]", -1)
+			ftext("Используйте: /mpr [ID]", -1)
 			return
 		end
 	else
-		ftext('Р’С‹ РЅРµ Р°РєС‚РёРІРёСЂРѕРІР°Р»Рё РјРёРЅРё-РїРµСЂРµРґР°С‚С‡РёРє: /onp 1')
+		ftext('Вы не активировали мини-передатчик: /onp 1')
     end
 end
 
 function onp(pam)
 	if pam == "" or pam < "0" and pam ~= "1" or pam == nil then
-        ftext("Р’РІРµРґРёС‚Рµ: /onp [РўРёРї]", -1)
-        ftext("0 - Р’С‹РєР»СЋС‡РёС‚СЊ Р°РІС‚РѕРїСЂРѕСЃР»СѓС€РєСѓ. 1 - Р’РєР»СЋС‡РёС‚СЊ Р°РІС‚РѕРїСЂРѕСЃР»СѓС€РєСѓ.", -1)
+        ftext("Введите: /onp [Тип]", -1)
+        ftext("0 - Выключить автопрослушку. 1 - Включить автопрослушку.", -1)
 		check = false
 		check1 = false
 	elseif pam == "0" then
 		check = false
 		check1 = false
-		ftext("Р’С‹ РІС‹РєР»СЋС‡РёР»Рё Р°РІС‚РѕРїСЂРѕСЃР»СѓС€РєСѓ.", -1)
+		ftext("Вы выключили автопрослушку.", -1)
 	elseif pam == "1" then
 		check = true
 		check1 = true
-		ftext("Р’С‹ РІРєР»СЋС‡РёР»Рё Р°РІС‚РѕРїСЂРѕСЃР»СѓС€РєСѓ.")
+		ftext("Вы включили автопрослушку.")
 	else
-		ftext("Р’С‹ РІРІРµР»Рё РЅРµРІРµСЂРЅС‹Р№ С‚РёРї.")
+		ftext("Вы ввели неверный тип.")
 		check = false
 		check1 = false
 	end
@@ -95,10 +95,10 @@ end
 
 function sh(pam)
     if #pam ~= 0 then
-        sampSendChat(string.format('/r [РњРёРЅРё-РїРµСЂРµРґР°С‚С‡РёРє]: *С€РµРїРѕС‚РѕРј* %s ', pam))
+        sampSendChat(string.format('/r [Мини-передатчик]: *шепотом* %s ', pam))
     else
-        ftext('Р’РІРµРґРёС‚Рµ /sh [С‚РµРєСЃС‚]')
-		ftext('РўРµРєСЃС‚ С€РµРїРѕС‚РѕРј: /sh [РўРµРєСЃС‚]')
+        ftext('Введите /sh [текст]')
+		ftext('Текст шепотом: /sh [Текст]')
     end
 end
 
@@ -115,18 +115,18 @@ function update()
                 ttt = updlist1
 			    if info and info.latest then
                     if tonumber(thisScript().version) < tonumber(info.latest) then
-                        ftext('РћР±РЅР°СЂСѓР¶РµРЅРѕ РѕР±РЅРѕРІР»РµРЅРёРµ {0C2265}FBI Helper{ffffff}.')
+                        ftext('Обнаружено обновление {0C2265}FBI Helper{ffffff}.')
 						lua_thread.create(goupdate)
                     else
-                        ftext('РћР±РЅРѕРІР»РµРЅРёР№ СЃРєСЂРёРїС‚Р° РЅРµ РѕР±РЅР°СЂСѓР¶РµРЅРѕ. РџСЂРёСЏС‚РЅРѕР№ РёРіСЂС‹.')
+                        print('Обновлений скрипта не обнаружено. Приятной игры.')
                         update = false
 				    end
                 end
             else
-                ftext("РџСЂРѕРІРµСЂРєР° РѕР±РЅРѕРІР»РµРЅРёСЏ РїСЂРѕС€РєР° РЅРµСѓСЃРїРµС€РЅРѕ. Р—Р°РїСѓСЃРєР°СЋ СЃС‚Р°СЂСѓСЋ РІРµСЂСЃРёСЋ.")
+                print("Проверка обновления прошка неуспешно. Запускаю старую версию.")
             end
         elseif status == 64 then
-            ftext("РџСЂРѕРІРµСЂРєР° РѕР±РЅРѕРІР»РµРЅРёСЏ РїСЂРѕС€РєР° РЅРµСѓСЃРїРµС€РЅРѕ. Р—Р°РїСѓСЃРєР°СЋ СЃС‚Р°СЂСѓСЋ РІРµСЂСЃРёСЋ.")
+            print("Проверка обновления прошка неуспешно. Запускаю старую версию.")
             update = false
         end
     end)
@@ -134,13 +134,13 @@ end
 
 
 function goupdate()
-    ftext('РќР°С‡Р°Р»РѕСЃСЊ СЃРєР°С‡РёРІР°РЅРёРµ РѕР±РЅРѕРІР»РµРЅРёСЏ. РЎРєСЂРёРїС‚ РїРµСЂРµР·Р°РіСЂСѓР·РёС‚СЃСЏ С‡РµСЂРµР· РїР°СЂСѓ СЃРµРєСѓРЅРґ.', -1)
+    ftext('Началось скачивание обновления. Скрипт перезагрузится через пару секунд.', -1)
     wait(300)
     downloadUrlToFile(updatelink, thisScript().path, function(id3, status1, p13, p23)
         if status1 == dlstatus.STATUS_ENDDOWNLOADDATA then
             thisScript():reload()
         elseif status1 == 64 then
-            ftext("РЎРєР°С‡РёРІР°РЅРёРµ РѕР±РЅРѕРІР»РµРЅРёСЏ РїСЂРѕС€Р»Рѕ РЅРµ СѓСЃРїРµС€РЅРѕ. Р—Р°РїСѓСЃРєР°СЋ СЃС‚Р°СЂСѓСЋ РІРµСЂСЃРёСЋ")
+            ftext("Скачивание обновления прошло не успешно. Запускаю старую версию")
         end
     end)
 end
