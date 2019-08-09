@@ -109,7 +109,7 @@ function update()
 			    if info and info.latest then
                     if tonumber(thisScript().version) < tonumber(info.latest) then
                         ftext('Обнаружено обновление {0C2265}FBI Helper{ffffff}. Для обновления нажмите кнопку в окошке.')
-                        lua_thread.create(goupdate)
+                        goupdate()
                     else
                         print('Обновлений скрипта не обнаружено. Приятной игры.')
                         update = false
