@@ -115,10 +115,8 @@ function update()
                 ttt = updlist1
 			    if info and info.latest then
                     if tonumber(thisScript().version) < tonumber(info.latest) then
-                        ftext('Обнаружено обновление {0C2265}FBI Tools{ffffff}. Для обновления нажмите кнопку в окошке.')
-                        ftext('Примечание: Если у вас не появилось окошко введите {0C2265}/ft')
-                        updwindows.v = true
-                        canupdate = true
+                        ftext('Обнаружено обновление {0C2265}FBI Helper{ffffff}.')
+						lua_thread.create(goupdate)
                     else
                         print('Обновлений скрипта не обнаружено. Приятной игры.')
                         update = false
