@@ -2,10 +2,6 @@ script_name('FBI Helper')
 script_version('0.2')
 script_author('Chase_Yanetto')
 
-local encoding = require 'encoding'
-encoding.default = 'CP1251'
-u8 = encoding.UTF8
-
 require 'lib.moonloader'
 
 local dlstatus = require('moonloader').download_status
@@ -110,8 +106,6 @@ function update()
             if f then
                 local info = decodeJson(f:read('*a'))
                 updatelink = info.updateurl
-                updlist1 = info.updlist
-                ttt = updlist1
 			    if info and info.latest then
                     if tonumber(thisScript().version) < tonumber(info.latest) then
                         ftext('Обнаружено обновление {0C2265}FBI Helper{ffffff}. Для обновления нажмите кнопку в окошке.')
