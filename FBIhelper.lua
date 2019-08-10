@@ -1,5 +1,5 @@
 script_name('FBI Helper')
-script_version("0.2")
+script_version '0.2'
 script_author('Chase_Yanetto')
 
 local encoding = require 'encoding'
@@ -102,7 +102,7 @@ end
 
 
 function update()
-    local fpath = os.getenv('TEMP') .. '\\ftulsupd.json'
+    local fpath = os.getenv('TEMP') .. '\\fhelp.json'
     downloadUrlToFile('https://raw.githubusercontent.com/ennuiby/fbitol/master/ftulsupd.json', fpath, function(id, status, p1, p2)
         if status == dlstatus.STATUS_ENDDOWNLOADDATA then
             local f = io.open(fpath, 'r')
