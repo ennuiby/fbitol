@@ -1,0 +1,406 @@
+# -*- coding: utf-8 -*-
+
+import bs4 as bs4
+import requests
+import random
+import datetime
+import math
+import logging
+import vk_api
+import json
+
+#  logging.debug("This is a debug message")
+#  logging.info("Informational message")
+#  logging.error("An error has happened!")
+
+
+logging.basicConfig(filename="requests.log", level=logging.INFO)
+
+with open("tokens.json", "r") as token_for_read:
+    file_content = token_for_read.read()
+    token_for_user = json.loads(file_content)['for_user']
+    token_for_group = json.loads(file_content)['for_group']
+
+token = token_for_group
+token_user = token_for_user
+
+ids_who_have_access = [374995034, 128053129]
+
+# как персонаж
+vk_user = vk_api.VkApi(token=token_user)
+vk_user1 = vk_user.get_api()
+
+# Авторизуемся как сообщество
+vk = vk_api.VkApi(token=token)
+vk1 = vk.get_api()
+
+now = datetime.datetime.now()
+
+a = 0
+var_a = 0
+var_b = 0
+var_pr = False
+var_rand = False
+var_rand1 = False
+otvet = None
+firstOtvet = False
+var_perevod = False
+var_new_rasp = False
+
+ivan = "Иван"
+otvmyname = ["Меня зовут ", "My name is ", "Мой создатель назвал меня "]
+kakdela = ['Хорошо, а у Вас, ', 'У меня всё норм, а у Вас, ']
+question = ['М?', '?']
+rand = ['312']
+rand1 = ['Я выбрал число: ', 'Я выбирааааю число: ', 'Хм, кажется это число: ', 'О да, число: ']
+anekdot = "На футбольном матче один из зрителей спрашивает мальчика:\n \n— Где же ты деньги-то взял на такой дорогой билет? \n— Отец купил, \n— А где он сам? \n— Дома. Билет ищет......"
+
+
+def write_raspisanie(user_id):
+    with open('new_rasp.txt') as f:
+        id_dsn = f.read()
+    vk.method("messages.send",
+              {"user_id": user_id, "attachment": id_dsn,
+               "random_id": 0, "v": 5.103})
+
+
+def write_msg_for_chat(peer_id, message):
+    get_id_group()
+    vk.method('messages.send', {'peer_id': peer_id, 'message': message, 'random_id': random.randint(0, 2048)})
+
+def wwwdw(peer_id, message):
+    vk.method('messages.send', {'peer_id': peer_id, 'message': message, 'forward_messages': 1, 'random_id': random.randint(0, 2048)})
+
+
+def get_status_of_user_id():
+    json_response = vk_user.method("status.get",
+                                   {"user_id": 128053129,
+                                    "v": 5.103})
+    gettext = json.loads(json.dumps(json_response))['text']
+    return f"{gettext}"
+
+
+def get_members():
+    json_response = vk.method("messages.getConversationMembers",
+                              {"peer_id": 2000000001,
+                               "v": 5.103})
+
+    members = json.loads(json.dumps(json_response))['items']
+
+    members_ids = [member['member_id'] for member in members if member['member_id'] > 0]
+
+    for member_id in members_ids:
+        return f'[id{member_id}|#]'
+
+
+def get_id_group():
+    json_response = vk.method("messages.searchConversations",
+                              {"q": "ДЦП",
+                               "count:": 1,
+                               "v": 5.103})
+    print(json_response)
+
+
+def get_histort(user_id):
+    json_response = vk_user.method("messages.getHistory",
+                                   {"user_id": user_id,
+                                    "count": 1,
+                                    "v": 5.103})
+    gethist = json.loads(json.dumps(json_response))['count']
+    unixtime = json.loads(json.dumps(json_response))['items'][0]['date']
+    """message = json.loads(json.dumps(json_response))['items'][0]['text']"""
+    value = datetime.datetime.fromtimestamp(unixtime)
+    date = value.strftime('%d.%m.%Y, %H:%M:%S.')
+
+    print(json_response)
+    return f"Кол-во сообщений: {gethist}.\nПосл. время: {date} UNX: {unixtime}"
+
+
+class VkBot:
+    def __init__(self, user_id):
+        print("\nСоздан объект бота!")
+
+        self._USER_ID = user_id
+        self._USERNAME = self._get_user_name_from_vk_id(user_id)
+        self._USERSECONDNAME = self._get_user_secondname_from_vk_id(user_id)
+        self._COMMANDS = ["ПРИВЕТ", "КАК ДЕЛА", "КАК ДЕЛА?", "КАК ТЕБЯ ЗОВУТ", "КАК ТЕБЯ ЗОВУТ?", "!HELP", "ДАТА",
+                          "АЙПИ", "РАНДОМ", "КУРС", "НГ", "ВОВА", "ЧИСЛО", "ИМЯ", "ПЕРЕВЕДИ", "КК", "ЦЦ", "А", "Ф"]
+
+    def _get_user_name_from_vk_id(self, user_id):
+        request = requests.get("https://vk.com/id" + str(user_id))
+        bs = bs4.BeautifulSoup(request.text, "html.parser")
+
+        user_name = self._clean_all_tag_from_str(bs.findAll("title")[0])
+
+        return user_name.split()[0]  # 0 - Name , 1 - Second name.
+
+    def _get_user_secondname_from_vk_id(self, user_id):
+        request = requests.get("https://vk.com/id" + str(user_id))
+        bs = bs4.BeautifulSoup(request.text, "html.parser")
+
+        user_secondname = self._clean_all_tag_from_str(bs.findAll("title")[0])
+
+        return user_secondname.split()[1]  # 0 - Name , 1 - Second name.
+
+    def new_message(self, message):
+        global var_pr
+        global var_rand, var_a, var_b, var_rand1, otvet, firstOtvet, a, var_perevod, var_new_rasp
+
+        idka = (
+            f"'{message}'? Я не знаю что это..\n\nЕсли вы считаете нужным добавить на это ответ\nсообщите разработчику:\n\nvk.com/6den6.",
+            f"Я не понимаю вашего сообщения.\nИспользуйте: !help", f'Ваше сообщение не известно.')
+
+        priveti = (
+            f"И вам привет, {self._USERNAME}.",
+            f"Здравствуйте, {self._USERNAME} {self._USERSECONDNAME}.",
+            f"Доброго времени суток!")
+
+        if message.upper() == self._COMMANDS[0] or message.upper() == "КУ":
+            return f"{random.choice(priveti)}"
+
+        elif message.upper() == self._COMMANDS[1] or message.upper() == self._COMMANDS[2]:
+            return f"{random.choice(kakdela)}{self._USERNAME}?"
+
+        elif message.upper() == self._COMMANDS[3] or message.upper() == self._COMMANDS[4]:
+            return f"{random.choice(otvmyname)}{ivan}."
+
+        elif message.upper() == self._COMMANDS[5]:
+            return f"Вы вызвали меню помощи.\n\n1. Вы можете поздароваться с ботом примером: привет\n2. Вы можете спросить как у него дела, если Вам, конечно же интересно.\n3. Вы можете спросить как его зовут.\n"
+
+        # DAY
+        elif message.upper() == self._COMMANDS[6]:
+            day = now.weekday()
+            date = now.strftime("%d-%m-%Y -- %H:%M")
+            if day == 0:
+                return f"Сегодня понедельник."
+            elif day == 1:
+                return f"Сегодня вторник."
+            elif day == 2:
+                return f"Сегодня среда."
+            elif day == 3:
+                return f"Сегодня четверг."
+            elif day == 4:
+                return f"Сегодня пятница."
+            elif day == 5:
+                return f"Сегодня суббота.", date
+            elif day == 6:
+                return f"Сегодня воскресенье."
+            else:
+                return f"Странно, но сегодняшний день я не знаю."
+
+        # IP
+        elif message.upper() == self._COMMANDS[7]:
+            var_pr = True
+            return f"Укажите айпи-адрес который нужно пробить. \n\nПример: 127.0.0.1"
+
+        # IP2
+        elif var_pr:
+            response = requests.get("http://ip-api.com/json/" + message)
+            json_response = response.json()
+            status = json_response['status']
+            if status == 'success':
+                city = json_response['city']
+                regionName = json_response['regionName']
+                zipCode = json_response['zip']
+                org = json_response['org']
+                var_pr = False
+
+                return f"Данные получены! \n\nОбласть: {regionName}. \nГород: {city}. \nZIP-Code: {zipCode}. \nКомпания предоставляющая услуги: {org}"
+            else:
+                var_pr = False
+                print(status)
+                return f"Упс.. Что-то пошло не так. \nВидимо, Вы указали неверно данные."
+
+        # RANDOM
+        elif message.upper() == self._COMMANDS[8]:
+            global var_rand
+            var_rand = True
+            return f"Укажите первое число:"
+
+        elif var_rand:
+            try:
+                var_a = int(message)
+                int(var_a)
+                var_rand = False
+                var_rand1 = True
+                return f"Укажите второе число:"
+            except ValueError:
+                var_rand = False
+                var_rand1 = False
+                return f"Упс, вы указали неверное значение."
+
+        elif var_rand1:
+            try:
+                var_b = int(message)
+                int(var_b)
+                if var_a < var_b:
+                    otvet = random.randint(var_a, var_b)
+                    var_rand1 = False
+                    var_rand = False
+                    return f"Я выбрал число: {otvet}."
+                else:
+                    var_rand = False
+                    var_rand1 = False
+                    return f"Первое число не может быть больше второго."
+            except ValueError:
+                var_rand = False
+                var_rand1 = False
+                return f"Вы указали неверное значение."
+
+        # BTC-KYPC
+        elif message.upper() == self._COMMANDS[9]:
+            response = requests.get("https://api.cryptonator.com/api/ticker/btc-rub", headers={
+                'User-Agent': 'Mozilla/5.0 (Platform; Security; OS-or-CPU; Localization; rv:1.4) Gecko/20030624 Netscape/7.1 (ax)'})
+            json_response = response.json()
+            status = json_response['success']
+            if status:
+                base = json_response['ticker']['base']
+                target = json_response['ticker']['target']
+                price = json_response['ticker']['price']
+                price1 = math.ceil(float(price))
+
+                if target == 'RUR':
+                    return f"Данные получены! \n\nКриптовалюта: {base}. \nВалюта: рубли. \nЦена: {price1} рублей - 1 BTC."
+                else:
+                    return f"Данные получены! \n\nКриптовалюта: {base}. \nВалюта: {target}. \nЦена: {price1}{target} - 1 BTC."
+
+            else:
+                return f"Произошла ошибка."
+
+        # TIME TO NEW YEAR
+        elif message.upper() == self._COMMANDS[10]:
+            datetime.datetime.today()
+            NY = datetime.datetime(2021, 1, 1)
+            d = NY - now
+            mm, ss = divmod(d.seconds, 60)
+            hh, mm = divmod(mm, 60)
+            print('До нового года: {} дней {} часа {} мин {} сек.'.format(d.days, hh, mm, ss))
+            return f"До нового года: {d.days} дней, {hh} часов, {mm} минут, {ss} сек."
+
+        # VOVA PUTIN
+        elif message.upper() == self._COMMANDS[11]:
+            return f"⣿⣿⣿⣻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣵⣿⣿⣿⠿⡟⣛⣧⣿⣯⣿⣝⡻⢿⣿⣿⣿⣿⣿⣿⣿ \n⣿⣿⣿⣿⣿⠋⠁⣴⣶⣿⣿⣿⣿⣿⣿⣿⣦⣍⢿⣿⣿⣿⣿⣿ \n⣿⣿⣿⣿⢷⠄⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣏⢼⣿⣿⣿⣿ \n⢹⣿⣿⢻⠎⠔⣛⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡏⣿⣿⣿⣿ \n⢸⣿⣿⠇⡶⠄⣿⣿⠿⠟⡛⠛⠻⣿⡿⠿⠿⣿⣗⢣⣿⣿⣿⣿ \n⠐⣿⣿⡿⣷⣾⣿⣿⣿⣾⣶⣶⣶⣿⣁⣔⣤⣀⣼⢲⣿⣿⣿⣿ \n⠄⣿⣿⣿⣿⣾⣟⣿⣿⣿⣿⣿⣿⣿⡿⣿⣿⣿⢟⣾⣿⣿⣿⣿ \n⠄⣟⣿⣿⣿⡷⣿⣿⣿⣿⣿⣮⣽⠛⢻⣽⣿⡇⣾⣿⣿⣿⣿⣿ \n⠄⢻⣿⣿⣿⡷⠻⢻⡻⣯⣝⢿⣟⣛⣛⣛⠝⢻⣿⣿⣿⣿⣿⣿ \n⠄⠸⣿⣿⡟⣹⣦⠄⠋⠻⢿⣶⣶⣶⡾⠃⡂⢾⣿⣿⣿⣿⣿⣿ \n⠄⠄⠟⠋⠄⢻⣿⣧⣲⡀⡀⠄⠉⠱⣠⣾⡇⠄⠉⠛⢿⣿⣿⣿ \n⠄⠄⠄⠄⠄⠈⣿⣿⣿⣷⣿⣿⢾⣾⣿⣿⣇⠄⠄⠄⠄⠄⠉\n⠉ ⠄⠄⠄⠄⠄⠄⠸⣿⣿⠟⠃⠄⠄⢈⣻⣿⣿⠄⠄⠄⠄⠄⠄⠄\n ⠄⠄⠄⠄⠄⠄⠄⢿⣿⣾⣷⡄⠄⢾⣿⣿⣿⡄⠄⠄⠄⠄⠄⠄\n ⠄⠄⠄⠄⠄⠄⠄⠸⣿⣿⣿⠃⠄⠈⢿⣿⣿⠄⠄⠄⠄⠄. ."
+
+        # 4ISLO OTGADAY
+        elif message.upper() == self._COMMANDS[12]:
+            firstOtvet = True
+            a = int(random.randint(0, 100))
+            return f"Привет, {self._USERNAME}!\n\n Я загадал число от 1 до 100. Попробуй его угадать!"
+
+        elif firstOtvet:
+            if int(message) > 100:
+                return f"Указывайте число не больше 100!"
+            if int(message) < 0:
+                return f"Указывайте число не меньше 0!"
+            elif int(message) > a:
+                firstOtvet = True
+                return f"Загаданное число меньше!\nПопробуй еще раз!"
+            elif int(message) < a:
+                firstOtvet = True
+                return f"Загаданное число больше!\nПопробуй еще раз!"
+            elif int(message) == a:
+                firstOtvet = False
+                return f"Вы угадали загаданное число!\nМолодец, {self._USERNAME}!"
+            else:
+                return f"Что-то пошло не так!"
+
+        elif message.upper() == self._COMMANDS[13]:
+            return f"Вас зовут {self._USERNAME} {self._USERSECONDNAME}."
+
+        elif message.upper() == self._COMMANDS[14]:
+            var_perevod = True
+            return f"Бот будет переводить пока вы не напишите ""СТОП"" \n\nНапишите текст, который нужно перевести."
+
+        elif var_perevod:
+            response_opredtrans = requests.get(
+                'https://translate.yandex.net/api/v1.5/tr.json/detect?key=trnsl.1.1.20191222T153413Z.77ad1d5defbcaf95.b779199d5bd1d49591312b5111e6ad51e26ef549&text=' + message)
+            json_response = response_opredtrans.json()
+            code = json_response['code']
+            if code == 200:
+                lang = json_response['lang']
+                response_translatecounty = requests.get(
+                    "https://translate.yandex.net/api/v1.5/tr.json/getLangs?key=trnsl.1.1.20191222T153413Z.77ad1d5defbcaf95.b779199d5bd1d49591312b5111e6ad51e26ef549&ui=" + lang)
+                langokon = response_translatecounty.json()
+                langs = langokon['langs'][f"{lang}"]
+                lastperevod = requests.get(
+                    f'https://translate.yandex.net/api/v1.5/tr.json/translate?key=trnsl.1.1.20191222T153413Z.77ad1d5defbcaf95.b779199d5bd1d49591312b5111e6ad51e26ef549&text={message}&lang={lang}-ru')
+                lastperevoddecode = lastperevod.json()
+                code1 = lastperevoddecode['code']
+                if code1 == 200:
+                    text = lastperevoddecode["text"][0]
+                    if text.upper() == 'СТОП':
+                        var_perevod = False
+                        return f"Вы выключили автоперевод текста."
+                    print(text)
+                    return f"Был осуществлен перевод с языка {langs} на русский. \n\n\n {message} - {text}"
+            else:
+                var_perevod = False
+                return f"Упс.. Что-то пошло не так."
+
+        elif message.upper() == self._COMMANDS[15]:
+            write_msg_for_chat(2000000002, "hello")
+            return True
+
+        elif message.upper() == self._COMMANDS[16]:
+            for item in ids_who_have_access:
+                if item == self._USER_ID:
+                    var_new_rasp = True
+                    return f"Укажите данные фото."
+            else:
+                print(ids_who_have_access)
+                return f"Access denied."
+
+        elif var_new_rasp:
+            f = open('new_rasp.txt', 'w')  # открытие в режиме записи
+            f.write(message)  # запись Hello World в файл
+            f.close()  # закрытие файла
+            return f"Новое расписание загружено.\n\nИспользуйте: расписание"
+
+        elif message.upper() == self._COMMANDS[17]:
+            for item in ids_who_have_access:
+                if item == self._USER_ID:
+                    return f"Текущее кол-во сообщений Екатерины с Данилой: \n\n{get_histort(374995034)}"
+            else:
+                print(ids_who_have_access)
+                return f"Access denied."
+
+        elif message.upper() == self._COMMANDS[18]:
+            response = requests.get("http://worldtimeapi.org/api/timezone/Europe/Moscow", headers={
+                'User-Agent': 'Mozilla/5.0 (Platform; Security; OS-or-CPU; Localization; rv:1.4) Gecko/20030624 Netscape/7.1 (ax)'})
+            json_response = response.json()
+            timezone = json_response['timezone']
+            day_of_week = json_response['day_of_week']
+            day_of_year = json_response['day_of_year']
+            unixtime = json_response['unixtime']
+            value = datetime.datetime.fromtimestamp(unixtime)
+            date = value.strftime('%d.%m.%Y, %H:%M:%S.')
+
+            return f"Точное время получено. \n\nЧасовой пояс: {timezone}\nДень с начала года: {day_of_year}\nДень недели: {day_of_week}\nДата: {date}"
+
+
+        # LAST STRO4KA FOR ERROR
+        else:
+            date = now.strftime("%d-%m-%Y -- %H:%M")
+            logging.error(f"Not correct request from user: {self._USER_ID}!: {message}, date: {date},")
+            return {random.choice(idka)}
+
+    @staticmethod
+    def _clean_all_tag_from_str(string_line):
+        """
+        Очистка строки stringLine от тэгов и их содержимых
+        :param string_line: Очищаемая строка
+        :return: очищенная строка
+        """
+        result = ""
+        not_skip = True
+        for i in list(string_line):
+            if not_skip:
+                if i == "<":
+                    not_skip = False
+                else:
+                    result += i
+            else:
+                if i == ">":
+                    not_skip = True
+
+        return result
